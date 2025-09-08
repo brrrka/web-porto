@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FaHtml5,
   FaCss3Alt,
@@ -19,46 +19,36 @@ import {
   SiWordpress
 } from 'react-icons/si';
 
-// Isolated counter component - completely separate from main component
-const IsolatedCounter = ({ end, duration = 2000, prefix = "", suffix = "", counterId }) => {
+// Isolated counter component - always animate on mount
+const IsolatedCounter = ({ end, duration = 2000, prefix = "", suffix = "" }) => {
   const [count, setCount] = React.useState(0);
-  
+
   React.useEffect(() => {
-    // Check if this counter has already been animated using sessionStorage
-    const hasAnimated = sessionStorage.getItem(`counter_${counterId}_animated`);
-    if (hasAnimated === 'true') {
-      setCount(end);
-      return;
-    }
-    
     const timer = setTimeout(() => {
       let startTime = null;
       const startCount = 0;
-      
+
       const animate = (timestamp) => {
         if (!startTime) startTime = timestamp;
         const progress = timestamp - startTime;
         const percentage = Math.min(progress / duration, 1);
-        
+
         const easeOutCubic = 1 - Math.pow(1 - percentage, 3);
         const currentCount = Math.floor(startCount + (end - startCount) * easeOutCubic);
-        
+
         setCount(currentCount);
-        
+
         if (percentage < 1) {
           requestAnimationFrame(animate);
-        } else {
-          // Mark this counter as animated
-          sessionStorage.setItem(`counter_${counterId}_animated`, 'true');
         }
       };
-      
+
       requestAnimationFrame(animate);
     }, 500);
-    
+
     return () => clearTimeout(timer);
   }, []); // No dependencies - only run once on mount
-  
+
   return <span>{prefix}{count}{suffix}</span>;
 };
 
@@ -67,51 +57,27 @@ const IsolatedCounter = ({ end, duration = 2000, prefix = "", suffix = "", count
 const PROJECTS = [
   {
     id: 1,
-    title: "E-Commerce Dashboard",
-    description: "Modern admin dashboard dengan analytics real-time dan inventory management",
-    image: "bg-gradient-to-br from-blue-400 to-purple-500",
-    tags: ["React", "Node.js", "PostgreSQL"],
-    demoUrl: "#"
+    title: "Himatekom Website",
+    description: "Website resmi Himpunan Mahasiswa Teknik Komputer dengan sistem informasi mahasiswa, berita, dan event management",
+    image: "/assets/projects/himatekom.png", // Add your project screenshot here
+    tags: ["PHP", "MySQL", "Bootstrap", "JavaScript"],
+    demoUrl: "https://himatekom.com"
   },
   {
     id: 2,
-    title: "Restaurant Booking App",
-    description: "Aplikasi reservasi restaurant dengan notifikasi real-time",
-    image: "bg-gradient-to-br from-green-400 to-blue-500",
-    tags: ["Next.js", "Firebase", "Tailwind"],
-    demoUrl: "#"
+    title: "Nagari Pematang Panjang",
+    description: "Portal informasi digital untuk Nagari Pematang Panjang dengan fitur pelayanan publik dan informasi daerah",
+    image: "/assets/projects/pematangpanjang.png", // Add your project screenshot here
+    tags: ["Laravel", "MySQL", "Tailwind CSS", "Vue.js"],
+    demoUrl: "https://nagaripematangpanjang.com"
   },
   {
     id: 3,
-    title: "Learning Management System",
-    description: "Platform e-learning dengan video streaming dan progress tracking",
-    image: "bg-gradient-to-br from-orange-400 to-red-500",
-    tags: ["Laravel", "Vue.js", "MySQL"],
-    demoUrl: "#"
-  },
-  {
-    id: 4,
-    title: "Financial Portfolio Tracker",
-    description: "Aplikasi tracking investasi dengan data real-time dari API",
-    image: "bg-gradient-to-br from-purple-400 to-pink-500",
-    tags: ["React", "Express", "Chart.js"],
-    demoUrl: "#"
-  },
-  {
-    id: 5,
-    title: "Corporate Website",
-    description: "Website perusahaan dengan CMS dan multi-language support",
-    image: "bg-gradient-to-br from-indigo-400 to-cyan-500",
-    tags: ["Next.js", "Strapi", "Tailwind"],
-    demoUrl: "#"
-  },
-  {
-    id: 6,
-    title: "Mobile App Landing",
-    description: "Landing page untuk mobile app dengan animasi dan testimonials",
-    image: "bg-gradient-to-br from-pink-400 to-red-500",
-    tags: ["React", "Framer Motion", "Tailwind"],
-    demoUrl: "#"
+    title: "Digikom FTI Unand",
+    description: "Website Digital Komunikasi Fakultas Teknologi Informasi Universitas Andalas untuk publikasi dan informasi akademik",
+    image: "/assets/projects/digikom.jpg", // Add your project screenshot here
+    tags: ["WordPress", "PHP", "MySQL", "Custom Theme"],
+    demoUrl: "https://digikom.fti.unand.ac.id"
   }
 ];
 
@@ -428,7 +394,14 @@ const FAQ_DATA = [
   }
 ];
 
-export default function PortfolioPage() {
+export default function App() {
+  // PROFILE CONFIGURATION - Update these paths with your images
+  const PROFILE_CONFIG = {
+    profilePhoto: "/assets/bersite.png", // Add your profile photo here
+    showProfilePhoto: true, // Set to true when you add your photo
+    logoUrl: "/assets/bersite.png" // Your logo path
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -438,25 +411,58 @@ export default function PortfolioPage() {
   const [openFaq, setOpenFaq] = useState(null);
   const [currentRole, setCurrentRole] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeSection, setActiveSection] = useState('about');
 
   const roles = ['Full-Stack', 'Freelance', 'Professional', 'Experienced'];
 
 
   // Rotating text effect
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentRole((prev) => (prev + 1) % roles.length);
     }, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll to top visibility
-  React.useEffect(() => {
+  // Scroll handling and active section detection
+  useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setShowScrollTop(window.scrollY > 300);
+
+          // Get all sections
+          const sections = ['about', 'projects', 'services', 'testimonials', 'contact'];
+          const scrollPosition = window.scrollY + 200; // Fixed offset
+
+          let currentSection = 'about'; // Default section
+
+          // Find which section is currently in view
+          sections.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+              const sectionTop = section.offsetTop;
+
+              // Check if we've scrolled past this section
+              if (scrollPosition >= sectionTop - 100) {
+                currentSection = sectionId;
+              }
+            }
+          });
+
+          setActiveSection(currentSection);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Initial call to set active section on page load
+    setTimeout(handleScroll, 100); // Delay to ensure DOM is ready
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -464,6 +470,7 @@ export default function PortfolioPage() {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+      setActiveSection(sectionId);
     }
   };
 
@@ -491,30 +498,42 @@ export default function PortfolioPage() {
       {/* Navbar */}
       <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="text-2xl font-bold text-gray-900">
-              DevPortfolio
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-2">
+              <img
+                src={PROFILE_CONFIG.logoUrl}
+                alt="Logo"
+                className="w-10"
+              />
+              <div className="text-3xl font-bold text-gray-900">
+                Ber<span className="text-indigo-600">Studio</span>
+              </div>
             </div>
-            <div className="hidden md:flex space-x-8">
-              <button onClick={() => scrollToSection('about')} className="text-gray-600 hover:text-indigo-600 transition-colors">
+            <div className="hidden md:flex space-x-10">
+              <button onClick={() => scrollToSection('about')} className={`text-lg font-medium transition-colors ${activeSection === 'about' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+                }`}>
                 Tentang Saya
               </button>
-              <button onClick={() => scrollToSection('projects')} className="text-gray-600 hover:text-indigo-600 transition-colors">
+              <button onClick={() => scrollToSection('projects')} className={`text-lg font-medium transition-colors ${activeSection === 'projects' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+                }`}>
                 Portfolio
               </button>
-              <button onClick={() => scrollToSection('services')} className="text-gray-600 hover:text-indigo-600 transition-colors">
+              <button onClick={() => scrollToSection('services')} className={`text-lg font-medium transition-colors ${activeSection === 'services' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+                }`}>
                 Paket Harga
               </button>
-              <button onClick={() => scrollToSection('testimonials')} className="text-gray-600 hover:text-indigo-600 transition-colors">
+              <button onClick={() => scrollToSection('testimonials')} className={`text-lg font-medium transition-colors ${activeSection === 'testimonials' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+                }`}>
                 Testimoni
               </button>
-              <button onClick={() => scrollToSection('contact')} className="text-gray-600 hover:text-indigo-600 transition-colors">
+              <button onClick={() => scrollToSection('contact')} className={`text-lg font-medium transition-colors ${activeSection === 'contact' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+                }`}>
                 Kontak
               </button>
             </div>
             <button
               onClick={() => scrollToSection('contact')}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition-colors"
             >
               Hire Me
             </button>
@@ -556,37 +575,37 @@ export default function PortfolioPage() {
       {/* Stats Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div className="p-6">
-              <div className="text-4xl sm:text-5xl font-bold text-indigo-600 mb-2">
-                <IsolatedCounter end={50} suffix="+" counterId="projects" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
+            <div className="p-3 md:p-6">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-indigo-600 mb-1 md:mb-2">
+                <IsolatedCounter end={50} suffix="+" />
               </div>
-              <div className="text-lg font-semibold text-gray-900">Project Selesai</div>
-              <div className="text-sm text-gray-600">Website berkualitas tinggi</div>
+              <div className="text-base md:text-xl font-semibold text-gray-900">Project Selesai</div>
+              <div className="hidden md:block text-base text-gray-600 mt-1">Website berkualitas tinggi</div>
             </div>
 
-            <div className="p-6">
-              <div className="text-4xl sm:text-5xl font-bold text-indigo-600 mb-2">
-                <IsolatedCounter end={99} suffix="%" counterId="satisfaction" />
+            <div className="p-3 md:p-6">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-indigo-600 mb-1 md:mb-2">
+                <IsolatedCounter end={99} suffix="%" />
               </div>
-              <div className="text-lg font-semibold text-gray-900">Client Puas</div>
-              <div className="text-sm text-gray-600">Testimoni positif</div>
+              <div className="text-base md:text-xl font-semibold text-gray-900">Client Puas</div>
+              <div className="hidden md:block text-base text-gray-600 mt-1">Testimoni positif</div>
             </div>
 
-            <div className="p-6">
-              <div className="text-4xl sm:text-5xl font-bold text-indigo-600 mb-2">
-                <IsolatedCounter end={98} suffix="%" counterId="ontime" />
+            <div className="p-3 md:p-6">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-indigo-600 mb-1 md:mb-2">
+                <IsolatedCounter end={98} suffix="%" />
               </div>
-              <div className="text-lg font-semibold text-gray-900">Tepat Waktu</div>
-              <div className="text-sm text-gray-600">Sesuai deadline</div>
+              <div className="text-base md:text-xl font-semibold text-gray-900">Tepat Waktu</div>
+              <div className="hidden md:block text-base text-gray-600 mt-1">Sesuai deadline</div>
             </div>
 
-            <div className="p-6">
-              <div className="text-4xl sm:text-5xl font-bold text-indigo-600 mb-2">
-                <IsolatedCounter end={24} suffix="/7" counterId="support" />
+            <div className="p-3 md:p-6">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-indigo-600 mb-1 md:mb-2">
+                <IsolatedCounter end={24} suffix="/7" />
               </div>
-              <div className="text-lg font-semibold text-gray-900">Fast Response</div>
-              <div className="text-sm text-gray-600">Support siap membantu</div>
+              <div className="text-base md:text-xl font-semibold text-gray-900">Fast Response</div>
+              <div className="hidden md:block text-base text-gray-600 mt-1">Support siap membantu</div>
             </div>
           </div>
         </div>
@@ -596,7 +615,7 @@ export default function PortfolioPage() {
       <section id="about" className="relative pt-16 pb-20 sm:pt-24 sm:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
+            <div className="order-2 lg:order-1">
               <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 leading-tight">
                 <span
                   key={currentRole}
@@ -606,49 +625,60 @@ export default function PortfolioPage() {
                 </span>
                 <span className="text-gray-900"> Web Developer</span>
               </h1>
-              <p className="text-xl text-gray-600 mt-6 leading-relaxed">
+              <p className="text-xl text-gray-600 mt-6 leading-relaxed text-justify">
                 Saya adalah web developer berpengalaman 5+ tahun yang fokus pada pembuatan website berkualitas tinggi dengan kecepatan loading optimal, SEO-friendly, dan hasil yang dapat diukur untuk meningkatkan bisnis Anda.
               </p>
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Mengapa Memilih Saya?</h3>
-                <ul className="space-y-2 text-gray-600">
+              <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border-l-4 border-indigo-500">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></span>
+                  Mengapa Memilih Saya?
+                </h3>
+                <ul className="space-y-4 text-base text-gray-700">
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Website live dalam 1-4 minggu
+                    <span className="font-medium">Website live dalam 1-4 minggu</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Loading speed optimal & SEO ready
+                    <span className="font-medium">Loading speed optimal & SEO ready</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Support & maintenance berkelanjutan
+                    <span className="font-medium">Support & maintenance berkelanjutan</span>
                   </li>
                 </ul>
               </div>
             </div>
-            <div className="lg:justify-self-end relative">
+            <div className="lg:justify-self-end relative order-1 lg:order-2">
               {/* Decorative boxes */}
               <div className="absolute -top-4 -left-4 w-72 h-72 bg-indigo-200 rounded-2xl transform rotate-6 opacity-60"></div>
               <div className="absolute -top-2 -right-2 w-72 h-72 bg-purple-200 rounded-2xl transform -rotate-3 opacity-40"></div>
 
-              {/* Main photo placeholder */}
-              <div className="relative w-80 h-80 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 flex items-center justify-center overflow-hidden">
-                <div className="text-gray-500 text-center">
-                  <div className="w-24 h-24 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+              {/* PROFILE PHOTO - Controlled by PROFILE_CONFIG */}
+              <div className="relative w-80 h-80 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 flex items-center justify-center overflow-hidden p-20">
+                {PROFILE_CONFIG.showProfilePhoto ? (
+                  <img
+                    src={PROFILE_CONFIG.profilePhoto}
+                    alt="Profile Photo"
+                    className="w-full"
+                  />
+                ) : (
+                  <div className="text-gray-500 text-center">
+                    <div className="w-24 h-24 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div className="text-lg font-medium">Foto Profile</div>
+                    <div className="text-sm text-gray-600">Set showProfilePhoto: true</div>
                   </div>
-                  <div className="text-lg font-medium">Foto Profile</div>
-                  <div className="text-sm">atau Logo</div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -669,11 +699,31 @@ export default function PortfolioPage() {
             );
           })}
 
-          {/* Duplicate set for seamless loop */}
+          {/* Second set for seamless loop */}
           {SKILLS.filter(skill => skill.type === 'tech').map((skill, idx) => {
             const IconComponent = skill.icon;
             return (
               <div key={`second-${idx}`} className="flex items-center flex-shrink-0">
+                <IconComponent className="w-14 h-14 text-white" />
+              </div>
+            );
+          })}
+
+          {/* Third set for extra smoothness */}
+          {SKILLS.filter(skill => skill.type === 'tech').map((skill, idx) => {
+            const IconComponent = skill.icon;
+            return (
+              <div key={`third-${idx}`} className="flex items-center flex-shrink-0">
+                <IconComponent className="w-14 h-14 text-white" />
+              </div>
+            );
+          })}
+
+          {/* Fourth set for maximum seamless effect */}
+          {SKILLS.filter(skill => skill.type === 'tech').map((skill, idx) => {
+            const IconComponent = skill.icon;
+            return (
+              <div key={`fourth-${idx}`} className="flex items-center flex-shrink-0">
                 <IconComponent className="w-14 h-14 text-white" />
               </div>
             );
@@ -685,10 +735,10 @@ export default function PortfolioPage() {
       <section id="projects" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Featured Projects
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Beberapa project terpilih yang menunjukkan kemampuan dan kualitas kerja saya.
             </p>
           </div>
@@ -697,28 +747,43 @@ export default function PortfolioPage() {
             {PROJECTS.map((project) => (
               <div
                 key={project.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100 hover:border-indigo-200"
               >
-                <div className={`aspect-video ${project.image} relative`}>
-                  <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                {/* Image Container with Unique Hover Effect */}
+                <div className="relative aspect-video overflow-hidden">
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-150"
+                  />
+
+                  {/* Overlay with Demo Button */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-6">
                     <a
                       href={project.demoUrl}
-                      className="bg-white text-gray-900 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white text-gray-900 px-8 py-3 rounded-xl text-lg font-bold hover:bg-indigo-600 hover:text-white transition-all duration-300 transform hover:scale-105 shadow-xl z-10"
                     >
-                      View Demo
+                      🚀 Live Demo
                     </a>
                   </div>
                 </div>
 
+                {/* Content */}
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{project.title}</h3>
-                  <p className="text-gray-600 mb-4">{project.description}</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    {project.description}
+                  </p>
 
                   <div className="flex flex-wrap gap-2">
                     {project.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full"
+                        className="bg-indigo-100 text-indigo-800 text-sm px-4 py-2 rounded-full font-medium group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300"
                       >
                         {tag}
                       </span>
@@ -733,37 +798,37 @@ export default function PortfolioPage() {
 
       {/* Services Section */}
       <section id="services" className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              Website Packages
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-              Pilih paket yang sesuai dengan kebutuhan bisnis Anda. Semua paket include responsive design dan SEO optimization.
-            </p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            Website Packages
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+            Pilih paket yang sesuai dengan kebutuhan bisnis Anda. Semua paket include responsive design dan SEO optimization.
+          </p>
 
-            {/* Niche Selector */}
-            <div className="flex flex-wrap justify-center gap-2 mb-12">
-              {[
-                { key: 'landing-page', label: 'Landing Page' },
-                { key: 'company-profile', label: 'Company Profile' },
-                { key: 'toko-online', label: 'Toko Online' },
-                { key: 'event-seminar', label: 'Event & Seminar' }
-              ].map((niche) => (
-                <button
-                  key={niche.key}
-                  onClick={() => setSelectedNiche(niche.key)}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${selectedNiche === niche.key
-                    ? 'bg-indigo-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                >
-                  {niche.label}
-                </button>
-              ))}
-            </div>
+          {/* Niche Selector */}
+          <div className="flex flex-wrap justify-center gap-2 mb-12">
+            {[
+              { key: 'landing-page', label: 'Landing Page' },
+              { key: 'company-profile', label: 'Company Profile' },
+              { key: 'toko-online', label: 'Toko Online' },
+              { key: 'event-seminar', label: 'Event & Seminar' }
+            ].map((niche) => (
+              <button
+                key={niche.key}
+                onClick={() => setSelectedNiche(niche.key)}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${selectedNiche === niche.key
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+              >
+                {niche.label}
+              </button>
+            ))}
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8">
             {PACKAGES[selectedNiche].map((pkg, index) => (
               <div
@@ -773,7 +838,7 @@ export default function PortfolioPage() {
               >
                 {pkg.isRecommended && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-indigo-600 text-white px-5 py-2 rounded-full text-base font-semibold">
                       Recommended
                     </span>
                   </div>
@@ -811,22 +876,27 @@ export default function PortfolioPage() {
       </section>
 
       {/* Why Choose Me Section */}
-      <section className="py-20 ">
+      <section id="why-choose" className="py-20 bg-gradient-to-br from-gray-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              Kenapa Harus Memilih Saya?
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 text-white rounded-2xl mb-6">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              Kenapa Harus di Ber<span className="text-indigo-600">Studio</span>?
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Beberapa alasan mengapa saya menjadi pilihan terbaik untuk mengembangkan website bisnis Anda
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Beberapa alasan mengapa BerStudio menjadi pilihan terbaik untuk mengembangkan website bisnis Anda
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Pengerjaan Cepat</h3>
@@ -836,7 +906,7 @@ export default function PortfolioPage() {
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">SEO & Performance</h3>
@@ -846,7 +916,7 @@ export default function PortfolioPage() {
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                  <path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Support Berkelanjutan</h3>
@@ -856,7 +926,7 @@ export default function PortfolioPage() {
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Harga Transparan</h3>
@@ -870,10 +940,15 @@ export default function PortfolioPage() {
       <section id="testimonials" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-yellow-100 text-yellow-600 rounded-2xl mb-6">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               What Clients Say
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Testimoni dari klien yang puas dengan hasil kerja dan service yang diberikan.
             </p>
           </div>
@@ -892,7 +967,7 @@ export default function PortfolioPage() {
                 </div>
                 <div>
                   <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                  <div className="text-sm text-gray-500">{testimonial.role}</div>
+                  <div className="text-base text-gray-500 font-medium">{testimonial.role}</div>
                 </div>
               </div>
             ))}
@@ -916,7 +991,7 @@ export default function PortfolioPage() {
             <div>
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-base font-semibold text-gray-700 mb-3">
                     Nama Lengkap
                   </label>
                   <input
@@ -932,7 +1007,7 @@ export default function PortfolioPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-base font-semibold text-gray-700 mb-3">
                     Email Address
                   </label>
                   <input
@@ -948,7 +1023,7 @@ export default function PortfolioPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="project" className="block text-base font-semibold text-gray-700 mb-3">
                     Deskripsikan Project Anda
                   </label>
                   <textarea
@@ -1090,7 +1165,7 @@ export default function PortfolioPage() {
                 </button>
                 {openFaq === index && (
                   <div className="px-6 pb-4">
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-lg text-gray-600 leading-relaxed">
                       {faq.answer}
                     </p>
                   </div>
@@ -1157,19 +1232,20 @@ export default function PortfolioPage() {
             </button>
           </div>
 
-          <div className="mt-8 text-sm text-gray-300">
+          <div className="mt-8 text-base text-gray-300 font-medium">
             <p>💬 <strong>Online sekarang</strong> - Siap membantu Anda 24/7</p>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-16 border-t-4 border-indigo-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-center md:text-left mb-6 md:mb-0">
-              <div className="text-2xl font-bold mb-2">DevPortfolio</div>
-              <div className="text-gray-400">© 2025 DevPortfolio. All rights reserved.</div>
+            <div className="text-center md:text-left mb-8 md:mb-0">
+              <div className="text-3xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">BerStudio</div>
+              <div className="text-lg text-gray-300">© 2025 BerStudio. All rights reserved.</div>
+              <div className="text-base text-gray-400 mt-2">Crafted with ❤️ for your business success</div>
             </div>
 
             <div className="flex space-x-6">
