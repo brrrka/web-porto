@@ -16,8 +16,11 @@ import {
   SiFirebase,
   SiPostgresql,
   SiMysql,
-  SiWordpress
+  SiWordpress,
+  SiPhp
 } from 'react-icons/si';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from './firebase';
 
 // Isolated counter component - always animate on mount
 const IsolatedCounter = ({ end, duration = 2000, prefix = "", suffix = "" }) => {
@@ -58,26 +61,50 @@ const PROJECTS = [
   {
     id: 1,
     title: "Himatekom Website",
-    description: "Website resmi Himpunan Mahasiswa Teknik Komputer dengan sistem informasi mahasiswa, berita, dan event management",
-    image: "/assets/projects/himatekom.png", // Add your project screenshot here
-    tags: ["PHP", "MySQL", "Bootstrap", "JavaScript"],
+    description: "Website resmi Himpunan Mahasiswa Teknik Komputer dengan sistem informasi mahasiswa, berita, galeri, aspirasi dan event",
+    image: "/assets/projects/himatekom2.png",
+    tags: ["Laravel", "MySQL", "Tailwind CSS", "JavaScript"],
     demoUrl: "https://himatekom.com"
   },
   {
     id: 2,
-    title: "Nagari Pematang Panjang",
-    description: "Portal informasi digital untuk Nagari Pematang Panjang dengan fitur pelayanan publik dan informasi daerah",
-    image: "/assets/projects/pematangpanjang.png", // Add your project screenshot here
-    tags: ["Laravel", "MySQL", "Tailwind CSS", "Vue.js"],
-    demoUrl: "https://nagaripematangpanjang.com"
+    title: "SIMSAPRAS UNAND",
+    description: "Sistem Informasi Peminjaman Sarana Prasarana Universitas Andalas untuk memudahkan proses peminjaman gedung, ruangan dan fasilitas secara online. Website ini resmi digunakan oleh instansi saat ini",
+    image: "/assets/projects/simsapras.png",
+    tags: ["Laravel", "MySQL", "Tailwind CSS", "JavaScript"],
+    demoUrl: "https://simsapras.unand.ac.id"
   },
   {
     id: 3,
+    title: "Nagari Pematang Panjang",
+    description: "Portal informasi digital untuk Nagari Pematang Panjang dengan fitur informasi nagari, galeri, berita, peta, pelayanan publik dan informasi daerah",
+    image: "/assets/projects/pematangpanjang.png",
+    tags: ["Laravel", "MySQL", "Tailwind CSS"],
+    demoUrl: "https://nagaripematangpanjang.com"
+  },
+  {
+    id: 4,
     title: "Digikom FTI Unand",
-    description: "Website Digital Komunikasi Fakultas Teknologi Informasi Universitas Andalas untuk publikasi dan informasi akademik",
-    image: "/assets/projects/digikom.jpg", // Add your project screenshot here
-    tags: ["WordPress", "PHP", "MySQL", "Custom Theme"],
+    description: "Website Resmi Laboratorium Sistem Digital dan Arsitektur Komputer Fakultas Teknologi Informasi Universitas Andalas untuk membantu praktikum, peminjaman, publikasi dan informasi akademik",
+    image: "/assets/projects/digikom.png",
+    tags: ["Laravel", "MySQL", "Tailwind CSS"],
     demoUrl: "https://digikom.fti.unand.ac.id"
+  },
+  {
+    id: 5,
+    title: "OR Neotelemetri 14",
+    description: "Website Open Recruitment UKM Neotelemetri UNAND yang ke-14 dengan sistem pendaftaran dan ujian secara online",
+    image: "/assets/projects/or-neotelemetri.png",
+    tags: ["React", "Laravel", "MySQL", "Tailwind CSS"],
+    demoUrl: "https://or.neotelemetri.id"
+  },
+  {
+    id: 6,
+    title: "Desa Silungkang Oso",
+    description: "Website resmi Desa Silungkang Oso dengan fitur informasi nagari, galeri, berita, peta, pelayanan publik dan informasi daerah",
+    image: "/assets/projects/silungkangoso.png",
+    tags: ["React", "Laravel", "MySQL", "Tailwind CSS"],
+    demoUrl: "https://or.neotelemetri.id"
   }
 ];
 
@@ -85,46 +112,52 @@ const PACKAGES = {
   'landing-page': [
     {
       name: "Starter",
-      price: "Rp 2.500.000",
+      price: "Rp 800.000",
       isRecommended: false,
+      note: "Cocok untuk kamu yang baru mulai merintis bisnis dan ingin langsung tampil secara online",
       features: [
-        "Landing page 3-5 section",
-        "Responsive design mobile & desktop",
-        "Optimasi SEO dasar",
+        "1 Halaman Landing Page (3-5 section)",
+        "Tampilan Responsive untuk mobile & desktop",
+        "Free Domain (.com)",
+        "Hosting 3 bulan",
         "Contact form sederhana",
         "Loading speed optimal",
-        "2x revisi minor",
-        "Hosting setup guidance",
-        "1 bulan support"
-      ]
-    },
-    {
-      name: "Professional",
-      price: "Rp 4.500.000",
-      isRecommended: true,
-      features: [
-        "Landing page dengan animasi",
-        "Multi-page support (5-8 halaman)",
-        "Advanced SEO optimization",
-        "Google Analytics & tracking",
-        "Lead generation forms",
-        "Social media integration",
-        "3x revisi major",
-        "3 bulan support & maintenance"
+        "1x Revisi Gratis",
+        "1 bulan support & maintenance",
+        "Video Panduan Penggunaan Website"
       ]
     },
     {
       name: "Premium",
-      price: "Rp 7.000.000",
-      isRecommended: false,
+      price: "Rp 1.500.000",
+      isRecommended: true,
+      note: "Ideal untuk bisnis kamu yang ingin tampil lebih profesional",
       features: [
-        "Landing page dengan CMS",
-        "Blog integration",
-        "A/B testing setup",
-        "Advanced analytics dashboard",
-        "Email marketing integration",
-        "Conversion optimization",
-        "Unlimited revisi selama development",
+        "Semua yang ada di Paket Starter, plus:",
+        "1-3 Halaman Tambahan",
+        "Landing page dengan desain visual yang lebih kompleks",
+        "Animasi & interaktivitas halaman",
+        "Hosting 6 bulan",
+        "Social media integration",
+        "3x Revisi Gratis",
+        "Basic SEO optimization",
+        "3 bulan support & maintenance"
+      ]
+    },
+    {
+      name: "Pro",
+      price: "Rp 2.500.000",
+      isRecommended: false,
+      note: "Sempurna untuk bisnis yang ingin tampil beda dan siap bersaing di pasar digital, serta ingin fitur jauh lebih lengkap",
+      features: [
+        "Semua yang ada di Paket Premium, plus:",
+        "4-6 Halaman Tambahan",
+        "Request fitur custom (chat, testimonial, dll)",
+        "Blog integration (Opsional)",
+        "1 Email Bisnis Profesional",
+        "Speed optimization",
+        "Advanced SEO optimization",
+        "5x Revisi Gratis",
         "6 bulan support & maintenance"
       ]
     }
@@ -132,141 +165,174 @@ const PACKAGES = {
   'company-profile': [
     {
       name: "Basic",
-      price: "Rp 3.500.000",
+      price: "Rp 1.500.000",
       isRecommended: false,
+      note: "Cocok untuk yang baru merintis atau perusahaan kecil yang butuh web profesional",
       features: [
-        "Company profile 5-8 halaman",
-        "Responsive design",
-        "Galeri foto & video",
-        "Contact form & maps",
-        "Basic SEO optimization",
-        "2x revisi minor",
-        "Hosting setup guidance",
-        "2 bulan support"
+        "1-3 Halaman Company Profile (Home, About, Contact)",
+        "Tampilan Responsive untuk mobile & desktop",
+        "Free Domain (.com)",
+        "Hosting 3 bulan",
+        "Contact form sederhana",
+        "Loading speed optimal",
+        "1x Revisi Gratis",
+        "1 bulan support & maintenance",
+        "Video Panduan Penggunaan Website"
       ]
     },
     {
-      name: "Business",
-      price: "Rp 6.500.000",
+      name: "Bussiness",
+      price: "Rp 2.500.000",
       isRecommended: true,
+      note: "Best choice untuk perusahaan menengah yang ingin melakukan ekspansi secara digital",
       features: [
-        "Company profile lengkap 10-15 halaman",
+        "Semua yang ada di Paket Basic, plus:",
+        "5-7 Halaman Company Profile",
         "Team & portfolio showcase",
         "Admin panel untuk update konten",
         "Multi-language support",
-        "Advanced SEO & Google My Business",
+        "Implementasi SEO dasar",
         "Social media integration",
-        "3x revisi major",
-        "4 bulan support & maintenance"
+        "Animasi & interaktivitas halaman",
+        "Hosting 6 bulan",
+        "Social media integration",
+        "Basic SEO optimization",
+        "3x Revisi Gratis",
+        "3 bulan support & maintenance"
       ]
     },
     {
       name: "Enterprise",
-      price: "Rp 12.000.000",
+      price: "Rp 4.000.000",
       isRecommended: false,
+      note: "Untuk korporasi yang butuh solusi web kompleks dan ingin tampil profesional, punya fitur lengkap dan ingin scale up",
       features: [
-        "Corporate website dengan subdomain",
-        "News & blog management system",
-        "Client portal & document sharing",
-        "Advanced analytics & reporting",
-        "API integrations",
-        "Custom functionality development",
-        "Unlimited revisi selama development",
-        "12 bulan support & maintenance"
+        "Semua yang ada di Paket Bussiness, plus:",
+        "8-15 Halaman Company Profile",
+        "Request fitur tambahan (Blog, Project, Announcement, Post, dll)",
+        "Admin dashboard lengkap",
+        "1 Email Bisnis Profesional",
+        "Speed optimization",
+        "Advanced SEO optimization",
+        "5x Revisi Gratis",
+        "6 bulan support & maintenance"
       ]
     }
   ],
   'toko-online': [
     {
       name: "Startup",
-      price: "Rp 8.500.000",
+      price: "Rp 1.500.000",
       isRecommended: false,
+      note: "Cocok untuk yang baru mau jualan online dan butuh website e-commerce sederhana",
       features: [
-        "E-commerce dengan 50 produk",
-        "Payment gateway (Midtrans)",
-        "Inventory management basic",
-        "Order tracking system",
-        "Customer account system",
-        "Mobile-first design",
-        "2x revisi minor",
-        "3 bulan support"
+        "1 Halaman Landing Page dan Katalog Produk",
+        "Tampilan Responsive untuk mobile & desktop",
+        "Free Domain (.com)",
+        "Hosting 3 bulan",
+        "Contact form sederhana",
+        "Loading speed optimal",
+        "1x Revisi Gratis",
+        "Tombol Beli Sekarang → Direct ke WhatsApp atau Link lainnya",
+        "Section Testimoni, FAQ dan Promo",
+        "1 bulan support & maintenance",
+        "Video Panduan Penggunaan Website"
       ]
     },
     {
       name: "Growth",
-      price: "Rp 15.000.000",
+      price: "Rp 4.500.000",
       isRecommended: true,
+      note: "Perfect untuk bisnis yang siap scale up penjualan melalui website e-commerce profesional",
       features: [
-        "E-commerce unlimited produk",
-        "Multi payment gateway",
+        "Semua yang ada di Paket Startup, plus:",
+        "3-8 Halaman Katalog Produk",
+        "Hosting 6 bulan",
+        "E-commerce dengan unlimited produk dinamis",
+        "Fitur Search dan Filter produk",
+        "Fitur 'Tambah ke Keranjang' & Checkout via WhatsApp",
+        "Admin panel untuk manajemen produk, order & customer",
         "Advanced inventory & reporting",
         "Promo & discount system",
         "Affiliate program setup",
         "Email marketing integration",
-        "Admin dashboard lengkap",
-        "6 bulan support & maintenance"
+        "Basic SEO optimization",
+        "3x Revisi Gratis",
+        "3 bulan support & maintenance"
       ]
     },
     {
       name: "Scale",
-      price: "Rp 25.000.000",
+      price: "Rp 7.500.000",
       isRecommended: false,
+      note: "Untuk bisnis besar yang butuh marketplace sendiri dengan fitur e-commerce lengkap dan sistem pembayaran yang terotomatisasi. Cocok untuk brand yang ingin serius mengembangkan bisnis online.",
       features: [
-        "Multi-vendor marketplace",
-        "Advanced analytics & BI",
-        "Mobile app (React Native)",
-        "API untuk integrasi eksternal",
-        "Automated marketing tools",
-        "Custom logistics integration",
-        "Unlimited revisi & features",
-        "12 bulan support & maintenance"
+        "Semua yang ada di Paket Growth, plus:",
+        "Sistem Akun dan Keranjang Belanja untuk Customer",
+        "Integrasi dengan Payment Gateway (Midtrans, Xendit, dll)",
+        "Metode Pembayaran Lengkap (Transfer, E-Wallet, Kartu Kredit)",
+        "Admin dashboard lengkap untuk manajemen produk, order, diskon, customer, laporan & analytics",
+        "Checkout Otomatis dengan Notifikasi Email",
+        "Perhitungan Ongkir Otomatis",
+        "Advanced SEO optimization",
+        "5x Revisi Gratis",
+        "6 bulan support & maintenance"
       ]
     }
   ],
   'event-seminar': [
     {
       name: "Event Basic",
-      price: "Rp 4.000.000",
+      price: "Rp 1.000.000",
       isRecommended: false,
+      note: "Cocok untuk branding event sederhana seperti seminar, workshop, meetup, dll",
       features: [
-        "Landing page event",
-        "Registration form & payment",
-        "Attendee management",
-        "Email notifications",
-        "Certificate generator",
-        "Basic reporting",
-        "2x revisi minor",
-        "Support selama event"
+        "1 Halaman Landing Page Event",
+        "Tampilan Responsive untuk mobile & desktop",
+        "Free Domain (.com)",
+        "Hosting 3 bulan",
+        "Contact form sederhana",
+        "Loading speed optimal",
+        "1x Revisi Gratis",
+        "1 bulan support & maintenance",
+        "Full Support Selama Event"
       ]
     },
     {
       name: "Event Pro",
-      price: "Rp 8.500.000",
+      price: "Rp 4.500.000",
       isRecommended: true,
+      note: "Ideal untuk event profesional dengan kebutuhan fitur lengkap seperti pendaftaran, check-in, live streaming, dll",
       features: [
-        "Multi-event management",
-        "Advanced registration system",
-        "Payment gateway multiple",
-        "Check-in system (QR Code)",
-        "Live streaming integration",
-        "Networking features",
-        "Advanced analytics",
-        "3 bulan support & maintenance"
+        "Semua yang ada di Paket Event Basic, plus:",
+        "3-8 Halaman Landing Page Event",
+        "Hosting 6 bulan",
+        "Sistem Pendaftaran Online & Bukti Pembayaran secara Digital ",
+        "Fitur Live Streaming dan Check-in Peserta",
+        "Sistem Manajemen Peserta",
+        "Sertifikat Digital Otomatis",
+        "Admin dashboard lengkap",
+        "Basic SEO optimization",
+        "3x Revisi Gratis",
+        "3 bulan support & maintenance",
+        "Full Support Selama Event"
       ]
     },
     {
       name: "Event Enterprise",
-      price: "Rp 15.000.000",
+      price: "Rp 7.000.000",
       isRecommended: false,
+      note: "Untuk event besar dan kompleks seperti konferensi, festival, pameran, dengan kebutuhan fitur sangat lengkap dan kustomisasi tinggi",
       features: [
-        "White-label event platform",
-        "Mobile app untuk event",
-        "Virtual event capabilities",
-        "Sponsor management system",
-        "Advanced gamification",
-        "CRM integration",
-        "Custom development",
-        "6 bulan support & maintenance"
+        "Semua yang ada di Paket Event Pro, plus:",
+        "Sistem Pendaftaran Online & Pembayaran Terintegrasi dengan Payment Gateway (Midtrans, Xendit, dll)",
+        "Request fitur tambahan (Tiket, Sponsorship, Kalendar, Badge, Paket, dll)",
+        "Sistem Manajemen Peserta Lanjutan (Check-in, Badge, dll)",
+        "Fitur Interaktif (Q&A, Polling, Networking, dll)",
+        "Advanced SEO optimization",
+        "5x Revisi Gratis",
+        "6 bulan support & maintenance",
+        "Full Support Selama Event"
       ]
     }
   ]
@@ -324,6 +390,11 @@ const SKILLS = [
     icon: FaLaravel
   },
   {
+    name: "PHP",
+    type: "tech",
+    icon: SiPhp
+  },
+  {
     name: "Firebase",
     type: "tech",
     icon: SiFirebase
@@ -343,10 +414,6 @@ const SKILLS = [
     type: "tech",
     icon: FaDocker
   },
-  { name: "Communication", type: "soft" },
-  { name: "Problem Solving", type: "soft" },
-  { name: "Team Collaboration", type: "soft" },
-  { name: "Project Management", type: "soft" }
 ];
 
 const TESTIMONIALS = [
@@ -378,7 +445,11 @@ const FAQ_DATA = [
   },
   {
     question: "Apakah saya bisa request fitur khusus yang tidak ada di paket?",
-    answer: "Tentu! Saya sangat fleksibel dengan custom requirements. Kita bisa diskusikan kebutuhan spesifik Anda dan saya akan berikan quotation yang sesuai dengan fitur yang diinginkan."
+    answer: "Tentu! Saya sangat fleksibel dengan custom requirements. Kita bisa diskusikan kebutuhan spesifik Anda dan saya akan berikan quotation yang sesuai dengan fitur yang diinginkan. Silahkan hubungi saya melalui kontak yang telah disediakan."
+  },
+  {
+    question: "Saya gaptek, apa bisa mengelola websitenya sendiri?",
+    answer: "Bisa banget! Saya akan memberikan dokumentasi lengkap dan video tutorial cara mengelola website. Saya juga bisa adakan sesi training singkat agar Anda lebih paham."
   },
   {
     question: "Bagaimana sistem pembayaran dan apakah ada jaminan?",
@@ -390,37 +461,190 @@ const FAQ_DATA = [
   },
   {
     question: "Teknologi apa yang digunakan untuk membangun website?",
-    answer: "Saya menggunakan teknologi modern seperti React/Next.js untuk frontend, Node.js/Laravel untuk backend, dan database PostgreSQL/MySQL. Semua dipilih berdasarkan kebutuhan project Anda."
+    answer: "Saya menggunakan teknologi modern seperti Wordpress/React/Next.js untuk frontend, Node.js/Laravel untuk backend, dan database PostgreSQL/MySQL. Semua dipilih berdasarkan kebutuhan project Anda."
+  },
+  {
+    question: "Apakah saya perlu menyediakan hosting dan domain sendiri?",
+    answer: "Tentu! Saya juga bisa mengelola hosting dan domain. Saya akan memberikan quotation yang sesuai dengan kebutuhan Anda. Silahkan hubungi saya melalui kontak yang telah disediakan."
+  },
+  {
+    question: "Apakah bisa request desain khusus?",
+    answer: "Tentu! Saya bisa bekerja dengan desain yang Anda sediakan atau membantu membuat desain sesuai brand identity Anda. Kita bisa diskusikan lebih lanjut mengenai kebutuhan desain Anda."
   }
 ];
 
 export default function App() {
-  // PROFILE CONFIGURATION - Update these paths with your images
   const PROFILE_CONFIG = {
-    profilePhoto: "/assets/bersite.png", // Add your profile photo here
+    profilePhoto: "/assets/metampan.png", // Add your profile photo here
     showProfilePhoto: true, // Set to true when you add your photo
     logoUrl: "/assets/bersite.png" // Your logo path
+  };
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const visibleProjects = 3;
+
+  // Calculate max slides - untuk 6 projects, kita bisa slide sebanyak jumlah projects (seamless loop)
+  const maxSlides = PROJECTS.length;
+
+  // Helper function to get visible projects with circular looping
+  const getVisibleProjects = (startIndex) => {
+    const projects = [];
+    for (let i = 0; i < visibleProjects; i++) {
+      const index = (startIndex + i) % PROJECTS.length;
+      projects.push(PROJECTS[index]);
+    }
+    return projects;
+  };
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Auto-slide effect - only if more than 3 projects and not mobile
+  useEffect(() => {
+    if (PROJECTS.length > visibleProjects && !isMobile) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % maxSlides);
+      }, 20000); // Memperlambat ke 20 detik
+
+      return () => clearInterval(timer);
+    }
+  }, [PROJECTS.length, visibleProjects, isMobile, maxSlides]);
+
+  // Navigation functions - scroll one project at a time with smooth transition
+  const nextProject = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => (prev + 1) % maxSlides);
+    setTimeout(() => setIsTransitioning(false), 700);
+  };
+
+  const prevProject = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => (prev - 1 + maxSlides) % maxSlides);
+    setTimeout(() => setIsTransitioning(false), 700);
+  };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      nextProject();
+    } else if (distance < -minSwipeDistance) {
+      prevProject();
+    }
+
+    setTouchStartX(0);
+    setTouchEndX(0);
   };
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    whatsapp: '',
     project: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
   const [selectedNiche, setSelectedNiche] = useState('landing-page');
   const [openFaq, setOpenFaq] = useState(null);
   const [currentRole, setCurrentRole] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState('about');
+  const [currentCopyIndex, setCurrentCopyIndex] = useState(0);
+  const [isClickScrolling, setIsClickScrolling] = useState(false);
 
   const roles = ['Full-Stack', 'Freelance', 'Professional', 'Experienced'];
 
+  const copywritingMessages = [
+    {
+      mainText: "Website Profesional untuk",
+      highlight: "Meningkatkan Penjualan",
+      subtitle: "Dapatkan website yang tidak hanya terlihat menarik, tetapi juga menghasilkan leads dan meningkatkan omset bisnis Anda hingga 300% 🚀"
+    },
+    {
+      mainText: "Solusi Digital Terpercaya untuk",
+      highlight: "Mengembangkan Bisnis",
+      subtitle: "Dari landing page sampai toko online, kami bantu wujudkan website impian yang bikin kompetitor iri 💼"
+    },
+    {
+      mainText: "Website Modern & Responsif untuk",
+      highlight: "Menjangkau Lebih Banyak Customer",
+      subtitle: "80% pembeli browsing via mobile. Pastikan website Anda perfect di semua device untuk maksimalkan conversion 📱"
+    },
+    {
+      mainText: "Investasi Terbaik untuk",
+      highlight: "Masa Depan Bisnis Anda",
+      subtitle: "Website berkualitas = kredibilitas tinggi = customer lebih percaya = penjualan meningkat otomatis ✨"
+    },
+    {
+      mainText: "Partner Digital Agency untuk",
+      highlight: "Kesuksesan Online Anda",
+      subtitle: "Pengalaman mengembangkan lebih dari 15 project, memberikan support cepat dan komitmen memberikan hasil terbaik dalam waktu 1-4 minggu 💪"
+    }
+  ];
 
-  // Rotating text effect
+  // Function to highlight keywords in text
+  const highlightText = (text) => {
+    const keywords = {
+      '300%': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      '80%': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      'kompetitor iri': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      'browsing via mobile': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      'kredibilitas tinggi': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      'otomatis': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      '5+ tahun': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      '50+ klien puas': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold',
+      '1-4 minggu': 'text-yellow-300 bg-yellow-300/20 px-2 py-1 rounded font-bold'
+    };
+
+    let highlightedText = text;
+    Object.keys(keywords).forEach(keyword => {
+      const regex = new RegExp(`(${keyword})`, 'gi');
+      highlightedText = highlightedText.replace(regex, `<span class="${keywords[keyword]}">$1</span>`);
+    });
+
+    return <span dangerouslySetInnerHTML={{ __html: highlightedText }} />;
+  };
+
+  // Rotating text effect for roles
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentRole((prev) => (prev + 1) % roles.length);
     }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Rotating copywriting messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCopyIndex((prev) => (prev + 1) % copywritingMessages.length);
+    }, 4000); // Change every 4 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -433,8 +657,14 @@ export default function App() {
         requestAnimationFrame(() => {
           setShowScrollTop(window.scrollY > 300);
 
+          // Skip scroll detection if user just clicked a navbar item
+          if (isClickScrolling) {
+            ticking = false;
+            return;
+          }
+
           // Get all sections
-          const sections = ['about', 'projects', 'services', 'testimonials', 'contact'];
+          const sections = ['about', 'projects', 'services', 'contact', 'faq'];
           const scrollPosition = window.scrollY + 200; // Fixed offset
 
           let currentSection = 'about'; // Default section
@@ -464,13 +694,24 @@ export default function App() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isClickScrolling]);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      // Immediately set the active section
       setActiveSection(sectionId);
+
+      // Set flag to prevent scroll listener from interfering
+      setIsClickScrolling(true);
+
+      // Start smooth scrolling
+      element.scrollIntoView({ behavior: 'smooth' });
+
+      // Reset the flag after scroll animation completes (typically 1-2 seconds)
+      setTimeout(() => {
+        setIsClickScrolling(false);
+      }, 1500);
     }
   };
 
@@ -478,11 +719,42 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Terima kasih! Pesan Anda telah dikirim. Saya akan segera menghubungi Anda.');
-    setFormData({ name: '', email: '', project: '' });
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      // Add form data to Firestore
+      const docRef = await addDoc(collection(db, 'contacts'), {
+        name: formData.name,
+        email: formData.email,
+        whatsapp: formData.whatsapp,
+        project: formData.project,
+        timestamp: new Date(),
+        status: 'new'
+      });
+
+      console.log('Document written with ID: ', docRef.id);
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', whatsapp: '', project: '' });
+
+      // Reset success message after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus(null);
+      }, 5000);
+
+    } catch (error) {
+      console.error('Error adding document: ', error);
+      setSubmitStatus('error');
+
+      // Reset error message after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus(null);
+      }, 5000);
+    }
+
+    setIsSubmitting(false);
   };
 
   const handleInputChange = (e) => {
@@ -494,46 +766,46 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden pt-16 md:pt-20">
       {/* Navbar */}
-      <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+      <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-16 md:h-20">
             <div className="flex items-center space-x-2">
               <img
                 src={PROFILE_CONFIG.logoUrl}
                 alt="Logo"
-                className="w-10"
+                className="w-8 md:w-10"
               />
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-xl md:text-3xl font-bold text-gray-900">
                 Ber<span className="text-indigo-600">Studio</span>
               </div>
             </div>
-            <div className="hidden md:flex space-x-10">
-              <button onClick={() => scrollToSection('about')} className={`text-lg font-medium transition-colors ${activeSection === 'about' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+            <div className="hidden md:flex space-x-6 lg:space-x-10">
+              <button onClick={() => scrollToSection('about')} className={`text-sm lg:text-lg font-medium transition-colors ${activeSection === 'about' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
                 }`}>
                 Tentang Saya
               </button>
-              <button onClick={() => scrollToSection('projects')} className={`text-lg font-medium transition-colors ${activeSection === 'projects' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+              <button onClick={() => scrollToSection('projects')} className={`text-sm lg:text-lg font-medium transition-colors ${activeSection === 'projects' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
                 }`}>
                 Portfolio
               </button>
-              <button onClick={() => scrollToSection('services')} className={`text-lg font-medium transition-colors ${activeSection === 'services' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+              <button onClick={() => scrollToSection('services')} className={`text-sm lg:text-lg font-medium transition-colors ${activeSection === 'services' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
                 }`}>
                 Paket Harga
               </button>
-              <button onClick={() => scrollToSection('testimonials')} className={`text-lg font-medium transition-colors ${activeSection === 'testimonials' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
-                }`}>
-                Testimoni
-              </button>
-              <button onClick={() => scrollToSection('contact')} className={`text-lg font-medium transition-colors ${activeSection === 'contact' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+              <button onClick={() => scrollToSection('contact')} className={`text-sm lg:text-lg font-medium transition-colors ${activeSection === 'contact' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
                 }`}>
                 Kontak
+              </button>
+              <button onClick={() => scrollToSection('faq')} className={`text-sm lg:text-lg font-medium transition-colors ${activeSection === 'faq' ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'
+                }`}>
+                FAQ
               </button>
             </div>
             <button
               onClick={() => scrollToSection('contact')}
-              className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition-colors"
+              className="bg-indigo-600 text-white px-4 md:px-8 py-2 md:py-3 rounded-lg text-sm md:text-lg font-semibold hover:bg-indigo-700 transition-colors"
             >
               Hire Me
             </button>
@@ -542,32 +814,60 @@ export default function App() {
       </nav>
 
       {/* Jumbotron Section */}
-      <section className="relative bg-gradient-to-r from-gray-900 via-indigo-900 to-purple-900 text-white py-20 sm:py-32">
+      <section className="relative bg-gradient-to-r from-gray-900 via-indigo-900 to-purple-900 text-white pt-4 pb-16 sm:pt-12 sm:pb-20 lg:pt-12 lg:pb-32 overflow-hidden">
         <div className="absolute inset-0 bg-black/30"></div>
+
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6">
-              Jasa Pembuatan Website untuk{' '}
-              <span className="text-yellow-300">Meningkatkan Jangkauan</span>{' '}
-              Bisnis Anda
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-200 max-w-3xl mx-auto mb-12 leading-relaxed">
-              Dapatkan website profesional yang tidak hanya terlihat menarik, tetapi juga menghasilkan leads dan meningkatkan penjualan Anda hingga <strong className="text-yellow-300">300%</strong>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            {/* Dynamic Rotating Headlines */}
+            <div className="min-h-[180px] sm:min-h-[220px] lg:min-h-[280px] flex items-center justify-center">
+              <div key={currentCopyIndex} className="animate-fadeInUp">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                  {copywritingMessages[currentCopyIndex].mainText}{' '}
+                  <span className="text-yellow-300">{copywritingMessages[currentCopyIndex].highlight}</span>
+                </h1>
+              </div>
+            </div>
+
+            <div key={`subtitle-${currentCopyIndex}`} className="animate-fadeInUp delay-300 text-base sm:text-lg md:text-xl lg:text-2xl text-gray-200 max-w-4xl mx-auto mb-8 md:mb-12 leading-loose px-2 mt-0 lg:-mt-16">
+              {highlightText(copywritingMessages[currentCopyIndex].subtitle)}
+            </div>
+
+            {/* Progress Dots */}
+            <div className="flex justify-center space-x-2 mb-8">
+              {copywritingMessages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentCopyIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentCopyIndex
+                    ? 'bg-yellow-400 scale-125'
+                    : 'bg-white/30 hover:bg-white/50'
+                    }`}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center px-4">
               <button
                 onClick={() => scrollToSection('projects')}
-                className="bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all shadow-2xl"
+                className="bg-white text-indigo-600 px-6 md:px-8 py-3 md:py-4 rounded-xl text-base md:text-lg font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all shadow-2xl"
               >
                 Lihat Portfolio Saya
               </button>
               <button
                 onClick={() => scrollToSection('services')}
-                className="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all"
+                className="border-2 border-white text-white px-6 md:px-8 py-3 md:py-4 rounded-xl text-base md:text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all"
               >
                 Mulai Project Anda
               </button>
             </div>
+
           </div>
         </div>
       </section>
@@ -578,7 +878,7 @@ export default function App() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
             <div className="p-3 md:p-6">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-indigo-600 mb-1 md:mb-2">
-                <IsolatedCounter end={50} suffix="+" />
+                <IsolatedCounter end={15} suffix="+" />
               </div>
               <div className="text-base md:text-xl font-semibold text-gray-900">Project Selesai</div>
               <div className="hidden md:block text-base text-gray-600 mt-1">Website berkualitas tinggi</div>
@@ -612,11 +912,11 @@ export default function App() {
       </section>
 
       {/* Tentang Saya Section */}
-      <section id="about" className="relative pt-16 pb-20 sm:pt-24 sm:pb-32">
+      <section id="about" className="relative pt-12 pb-16 sm:pt-16 sm:pb-20 lg:pt-24 lg:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 <span
                   key={currentRole}
                   className="inline-block text-indigo-600 animate-fadeInUp"
@@ -625,29 +925,29 @@ export default function App() {
                 </span>
                 <span className="text-gray-900"> Web Developer</span>
               </h1>
-              <p className="text-xl text-gray-600 mt-6 leading-relaxed text-justify">
-                Saya adalah web developer berpengalaman 5+ tahun yang fokus pada pembuatan website berkualitas tinggi dengan kecepatan loading optimal, SEO-friendly, dan hasil yang dapat diukur untuk meningkatkan bisnis Anda.
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mt-4 lg:mt-6 leading-relaxed text-justify">
+                Saya adalah web developer berpengalaman dalam membangun website profesional yang tidak hanya menarik secara visual, tetapi juga fungsional dan dioptimasi untuk performa tinggi. Dengan keahlian di berbagai teknologi web modern, saya berkomitmen untuk membantu bisnis Anda tumbuh dan sukses di dunia digital.
               </p>
-              <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border-l-4 border-indigo-500">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <div className="mt-6 lg:mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 p-4 lg:p-6 rounded-xl border-l-4 border-indigo-500">
+                <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6 flex items-center">
                   <span className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></span>
                   Mengapa Memilih Saya?
                 </h3>
-                <ul className="space-y-4 text-base text-gray-700">
+                <ul className="space-y-3 lg:space-y-4 text-sm lg:text-base text-gray-700">
                   <li className="flex items-center">
-                    <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600 mr-3 lg:mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="font-medium">Website live dalam 1-4 minggu</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600 mr-3 lg:mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="font-medium">Loading speed optimal & SEO ready</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600 mr-3 lg:mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="font-medium">Support & maintenance berkelanjutan</span>
@@ -655,28 +955,28 @@ export default function App() {
                 </ul>
               </div>
             </div>
-            <div className="lg:justify-self-end relative order-1 lg:order-2">
+            <div className="lg:justify-self-end relative order-1 lg:order-2 flex justify-center lg:justify-end">
               {/* Decorative boxes */}
-              <div className="absolute -top-4 -left-4 w-72 h-72 bg-indigo-200 rounded-2xl transform rotate-6 opacity-60"></div>
-              <div className="absolute -top-2 -right-2 w-72 h-72 bg-purple-200 rounded-2xl transform -rotate-3 opacity-40"></div>
+              <div className="absolute -top-3 -left-3 lg:-top-4 lg:-left-4 w-64 h-72 lg:w-72 lg:h-92 bg-indigo-200 rounded-2xl transform rotate-6 opacity-60"></div>
+              <div className="absolute -top-1 -right-1 lg:-top-2 lg:-right-2 w-64 h-64 lg:w-72 lg:h-72 bg-purple-200 rounded-2xl transform -rotate-3 opacity-40"></div>
 
               {/* PROFILE PHOTO - Controlled by PROFILE_CONFIG */}
-              <div className="relative w-80 h-80 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 flex items-center justify-center overflow-hidden p-20">
+              <div className="relative w-64 h-80 lg:w-80 lg:h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 flex items-center justify-center overflow-hidden">
                 {PROFILE_CONFIG.showProfilePhoto ? (
                   <img
                     src={PROFILE_CONFIG.profilePhoto}
                     alt="Profile Photo"
-                    className="w-full"
+                    className="w-full object-fit object-top"
                   />
                 ) : (
                   <div className="text-gray-500 text-center">
-                    <div className="w-24 h-24 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-400 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <svg className="w-10 h-10 lg:w-12 lg:h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
-                    <div className="text-lg font-medium">Foto Profile</div>
-                    <div className="text-sm text-gray-600">Set showProfilePhoto: true</div>
+                    <div className="text-base lg:text-lg font-medium">Foto Profile</div>
+                    <div className="text-xs lg:text-sm text-gray-600">Set showProfilePhoto: true</div>
                   </div>
                 )}
               </div>
@@ -687,14 +987,14 @@ export default function App() {
 
 
       {/* Running Tech Stack Bar */}
-      <div className="bg-indigo-600 py-8 overflow-hidden">
-        <div className="animate-scroll flex items-center space-x-16">
+      <div className="bg-indigo-600 py-6 lg:py-8 overflow-hidden">
+        <div className="animate-scroll flex items-center space-x-8 lg:space-x-16">
           {/* First set */}
           {SKILLS.filter(skill => skill.type === 'tech').map((skill, idx) => {
             const IconComponent = skill.icon;
             return (
               <div key={`first-${idx}`} className="flex items-center flex-shrink-0">
-                <IconComponent className="w-14 h-14 text-white" />
+                <IconComponent className="w-10 h-10 lg:w-14 lg:h-14 text-white" />
               </div>
             );
           })}
@@ -704,7 +1004,7 @@ export default function App() {
             const IconComponent = skill.icon;
             return (
               <div key={`second-${idx}`} className="flex items-center flex-shrink-0">
-                <IconComponent className="w-14 h-14 text-white" />
+                <IconComponent className="w-10 h-10 lg:w-14 lg:h-14 text-white" />
               </div>
             );
           })}
@@ -714,7 +1014,7 @@ export default function App() {
             const IconComponent = skill.icon;
             return (
               <div key={`third-${idx}`} className="flex items-center flex-shrink-0">
-                <IconComponent className="w-14 h-14 text-white" />
+                <IconComponent className="w-10 h-10 lg:w-14 lg:h-14 text-white" />
               </div>
             );
           })}
@@ -724,7 +1024,7 @@ export default function App() {
             const IconComponent = skill.icon;
             return (
               <div key={`fourth-${idx}`} className="flex items-center flex-shrink-0">
-                <IconComponent className="w-14 h-14 text-white" />
+                <IconComponent className="w-10 h-10 lg:w-14 lg:h-14 text-white" />
               </div>
             );
           })}
@@ -732,67 +1032,206 @@ export default function App() {
       </div>
 
       {/* Projects Section */}
-      <section id="projects" className="py-20 bg-gray-50">
+      <section id="projects" className="pt-16 pb-24 lg:pt-20 lg:pb-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 lg:mb-6">
               Featured Projects
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-2">
               Beberapa project terpilih yang menunjukkan kemampuan dan kualitas kerja saya.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {PROJECTS.map((project) => (
-              <div
-                key={project.id}
-                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100 hover:border-indigo-200"
-              >
-                {/* Image Container with Unique Hover Effect */}
-                <div className="relative aspect-video overflow-hidden">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-150"
-                  />
+          {/* Desktop Carousel */}
+          {!isMobile && (
+            <div className="relative px-16 pb-16">
+              {/* Navigation Buttons - Positioned outside carousel */}
+              {PROJECTS.length > visibleProjects && (
+                <>
+                  <button
+                    onClick={prevProject}
+                    className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-indigo-50 text-indigo-600 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-indigo-100 hover:border-indigo-300"
+                  >
+                    <svg className="w-7 h-7 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
 
-                  {/* Overlay with Demo Button */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-6">
-                    <a
-                      href={project.demoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white text-gray-900 px-8 py-3 rounded-xl text-lg font-bold hover:bg-indigo-600 hover:text-white transition-all duration-300 transform hover:scale-105 shadow-xl z-10"
+                  <button
+                    onClick={nextProject}
+                    className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-indigo-50 text-indigo-600 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-indigo-100 hover:border-indigo-300"
+                  >
+                    <svg className="w-7 h-7 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              {/* Projects Container with Smooth Sliding */}
+              <div className="overflow-hidden">
+                <div className={`flex transition-all duration-700 ease-out ${isTransitioning ? 'opacity-95 transform scale-[0.98]' : 'opacity-100 transform scale-100'}`}>
+                  {getVisibleProjects(currentIndex).map((project, index) => (
+                    <div
+                      key={`${project.id}-${currentIndex}-${index}`}
+                      className="w-1/3 flex-shrink-0 px-4"
                     >
-                      🚀 Live Demo
-                    </a>
-                  </div>
-                </div>
+                      <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100 hover:border-indigo-200 h-full">
+                        {/* Image Container with Height Expand Effect */}
+                        <div className="relative overflow-hidden transition-all duration-700 ease-out h-48 group-hover:h-[450px]">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="w-full h-auto object-cover object-top transition-all duration-700 ease-out min-h-full"
+                          />
 
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
-                    {project.title}
-                  </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    {project.description}
-                  </p>
+                          {/* Overlay with Demo Button - Fixed at bottom */}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-6 h-20">
+                            <a
+                              href={project.demoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-white text-gray-900 px-8 py-3 rounded-xl text-lg font-bold hover:bg-indigo-600 hover:text-white transition-all duration-300 transform hover:scale-105 shadow-xl z-10"
+                            >
+                              🚀 Live Demo
+                            </a>
+                          </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-indigo-100 text-indigo-800 text-sm px-4 py-2 rounded-full font-medium group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                          {/* Scroll Indicator */}
+                          <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-2 rounded-full text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-500">
+                            📄 Full Preview
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6">
+                          <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
+                            {project.title}
+                          </h3>
+                          <p className="text-gray-600 mb-6 leading-relaxed">
+                            {project.description}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2">
+                            {project.tags.map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="bg-indigo-100 text-indigo-800 text-sm px-4 py-2 rounded-full font-medium group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Dot Indicators - Show current position if more than 3 projects */}
+              {PROJECTS.length > visibleProjects && (
+                <div className="flex justify-center space-x-2 mt-8">
+                  {PROJECTS.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentIndex
+                        ? 'bg-indigo-600 scale-125'
+                        : 'bg-gray-300 hover:bg-indigo-400'
+                        }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mobile Carousel */}
+          {isMobile && (
+            <div className="px-4 pb-12">
+              <div
+                className="overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div className={`flex transition-all duration-500 ease-out ${isTransitioning ? 'opacity-90 transform scale-[0.97]' : 'opacity-100 transform scale-100'}`}>
+                  {getVisibleProjects(currentIndex).slice(0, 1).map((project, index) => (
+                    <div
+                      key={project.id}
+                      className="w-full flex-shrink-0 px-2"
+                    >
+                      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 max-w-sm mx-auto">
+                        {/* Mobile Image Container - Fixed height, no expand */}
+                        <div className="relative h-48 overflow-hidden">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="w-full h-full object-cover object-top"
+                          />
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4">
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            {project.title}
+                          </h3>
+                          <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-3">
+                            {project.description}
+                          </p>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-1 mb-4">
+                            {project.tags.map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full font-medium"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Buttons at bottom */}
+                          <div className="pt-2 border-t border-gray-100">
+                            <a
+                              href={project.demoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block w-full bg-indigo-600 text-white text-center py-3 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all duration-300"
+                            >
+                              🚀 Live Demo
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile Dot Indicators */}
+              <div className="flex justify-center space-x-2 mt-6">
+                {Array.from({ length: maxSlides }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
+                      ? 'bg-indigo-600 scale-125'
+                      : 'bg-gray-300'
+                      }`}
+                  />
+                ))}
+              </div>
+
+              {/* Mobile swipe indicator */}
+              <div className="text-center mt-4 text-sm text-gray-500">
+                Swipe untuk melihat project lainnya →
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -868,6 +1307,11 @@ export default function App() {
                   >
                     Pilih Paket
                   </button>
+                  {pkg.note && (
+                    <p className="text-sm text-gray-500 text-center mt-3 italic">
+                      *{pkg.note}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
@@ -879,20 +1323,16 @@ export default function App() {
       <section id="why-choose" className="py-20 bg-gradient-to-br from-gray-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 text-white rounded-2xl mb-6">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-              </svg>
-            </div>
+
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Kenapa Harus di Ber<span className="text-indigo-600">Studio</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Beberapa alasan mengapa BerStudio menjadi pilihan terbaik untuk mengembangkan website bisnis Anda
+              Beberapa alasan mengapa BerStudio menjadi pilihan terbaik untuk mengembangkan website Anda
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -904,12 +1344,12 @@ export default function App() {
             </div>
 
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">SEO & Performance</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Kualitas Terjamin</h3>
               <p className="text-gray-600">Website yang dioptimasi untuk SEO dan loading speed, memastikan ranking tinggi di Google</p>
             </div>
 
@@ -932,19 +1372,24 @@ export default function App() {
               <h3 className="text-xl font-bold text-gray-900 mb-4">Harga Transparan</h3>
               <p className="text-gray-600">Pricing yang jelas tanpa biaya tersembunyi, dengan garansi uang kembali jika tidak puas</p>
             </div>
+
+            <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Tinggal Terima Beres</h3>
+              <p className="text-gray-600">Dari konsep hingga launching, semua ditangani profesional. Kamu tinggal fokus ke bisnis</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-gray-50">
+      {/* <section id="testimonials" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-yellow-100 text-yellow-600 rounded-2xl mb-6">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               What Clients Say
             </h2>
@@ -973,7 +1418,7 @@ export default function App() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Contact Section */}
       <section id="contact" className="py-20">
@@ -990,6 +1435,41 @@ export default function App() {
           <div className="grid lg:grid-cols-2 gap-12">
             <div>
               <form onSubmit={handleFormSubmit} className="space-y-6">
+                {/* Success/Error Messages */}
+                {submitStatus === 'success' && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-green-800">
+                          Terima kasih! Pesan Anda telah berhasil dikirim. Saya akan segera menghubungi Anda.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submitStatus === 'error' && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-red-800">
+                          Terjadi kesalahan saat mengirim pesan. Silakan coba lagi atau hubungi melalui WhatsApp.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label htmlFor="name" className="block text-base font-semibold text-gray-700 mb-3">
                     Nama Lengkap
@@ -1001,7 +1481,8 @@ export default function App() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="Masukkan nama Anda"
                   />
                 </div>
@@ -1017,8 +1498,26 @@ export default function App() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="nama@email.com"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="whatsapp" className="block text-base font-semibold text-gray-700 mb-3">
+                    Nomor WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    id="whatsapp"
+                    name="whatsapp"
+                    value={formData.whatsapp}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="081234567890 atau +6281234567890"
                   />
                 </div>
 
@@ -1033,16 +1532,28 @@ export default function App() {
                     onChange={handleInputChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="Ceritakan tentang website yang ingin Anda bangun..."
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 text-white py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transform hover:scale-105 transition-all"
+                  disabled={isSubmitting}
+                  className="w-full bg-indigo-600 text-white py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transform hover:scale-105 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
                 >
-                  Kirim Pesan
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Mengirim...
+                    </>
+                  ) : (
+                    'Kirim Pesan'
+                  )}
                 </button>
               </form>
             </div>
@@ -1051,7 +1562,7 @@ export default function App() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Kontak Langsung</h3>
               <div className="space-y-4">
                 <a
-                  href="mailto:hello@devportfolio.com"
+                  href="mailto:berkaaldizar8@gmail.com"
                   className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <svg className="w-6 h-6 text-indigo-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1059,13 +1570,13 @@ export default function App() {
                   </svg>
                   <div>
                     <div className="font-medium text-gray-900">Email</div>
-                    <div className="text-gray-600">hello@devportfolio.com</div>
+                    <div className="text-gray-600">berkaaldizar8@gmail.com</div>
                   </div>
                 </a>
 
                 {/* WhatsApp contact button */}
                 <a
-                  href="https://wa.me/6281234567890"
+                  href="https://wa.me/6289517839374"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1075,12 +1586,12 @@ export default function App() {
                   </svg>
                   <div>
                     <div className="font-medium text-gray-900">WhatsApp</div>
-                    <div className="text-gray-600">+62 812-3456-7890</div>
+                    <div className="text-gray-600">+62 895-1783-9374</div>
                   </div>
                 </a>
 
                 <a
-                  href="https://linkedin.com/in/devportfolio"
+                  href="https://linkedin.com/in/berka-aldizar"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1090,7 +1601,7 @@ export default function App() {
                   </svg>
                   <div>
                     <div className="font-medium text-gray-900">LinkedIn</div>
-                    <div className="text-gray-600">linkedin.com/in/devportfolio</div>
+                    <div className="text-gray-600">linkedin.com/in/berka-aldizar</div>
                   </div>
                 </a>
               </div>
@@ -1108,7 +1619,7 @@ export default function App() {
                     <svg className="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Garansi bug-fix 3 bulan
+                    Konsultasi 100% Gratis
                   </li>
                   <li className="flex items-center">
                     <svg className="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1124,55 +1635,51 @@ export default function App() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-gray-50">
+      <section id="faq" className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              Frequently Asked Questions
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              Pertanyaan yang Sering Ditanyakan
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Jawaban untuk pertanyaan yang sering ditanyakan seputar jasa pembuatan website
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Temukan jawaban untuk pertanyaan-pertanyaan umum seputar jasa pembuatan website
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {FAQ_DATA.map((faq, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-              >
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
                 >
-                  <span className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 pr-4">
                     {faq.question}
-                  </span>
+                  </h3>
                   <svg
-                    className={`w-5 h-5 text-gray-500 transition-transform ${openFaq === index ? 'rotate-180' : ''
+                    className={`w-5 h-5 text-gray-500 transition-transform duration-200 flex-shrink-0 ${openFaq === index ? 'rotate-180' : ''
                       }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {openFaq === index && (
-                  <div className="px-6 pb-4">
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                      {faq.answer}
-                    </p>
+                  <div className="px-6 pb-6">
+                    <div className="border-t border-gray-100 pt-4">
+                      <p className="text-gray-600 leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             ))}
           </div>
+
+
         </div>
       </section>
 
@@ -1214,7 +1721,7 @@ export default function App() {
 
           <div className="space-y-4 sm:space-y-0 sm:space-x-6 flex flex-col sm:flex-row justify-center">
             <a
-              href="https://wa.me/6281234567890?text=Halo! Saya tertarik dengan jasa pembuatan website Anda. Bisa kita diskusi lebih lanjut?"
+              href="https://wa.me/6289517839374?text=Halo! Saya tertarik dengan jasa pembuatan website Anda. Bisa kita diskusi lebih lanjut?"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transform hover:scale-105 transition-all shadow-2xl"
@@ -1243,14 +1750,14 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-8 md:mb-0">
-              <div className="text-3xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">BerStudio</div>
+              <div className="text-3xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent"><span className='text-gray-400'>Ber</span>Studio</div>
               <div className="text-lg text-gray-300">© 2025 BerStudio. All rights reserved.</div>
               <div className="text-base text-gray-400 mt-2">Crafted with ❤️ for your business success</div>
             </div>
 
             <div className="flex space-x-6">
               <a
-                href="https://github.com/devportfolio"
+                href="https://github.com/brrrka"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -1262,7 +1769,7 @@ export default function App() {
               </a>
 
               <a
-                href="https://linkedin.com/in/devportfolio"
+                href="https://linkedin.com/in/berka-aldizar"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -1274,7 +1781,7 @@ export default function App() {
               </a>
 
               <a
-                href="mailto:hello@devportfolio.com"
+                href="mailto:berkaaldizar8@gmail.com"
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="Email"
               >
@@ -1289,7 +1796,7 @@ export default function App() {
 
       {/* Floating WhatsApp Button */}
       <a
-        href="https://wa.me/6281234567890"
+        href="https://wa.me/6289517839374?text=Halo,%20saya%20ingin%20menghubungi%20Anda."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 z-50"
