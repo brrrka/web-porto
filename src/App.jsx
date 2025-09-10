@@ -593,7 +593,7 @@ export default function App() {
   const copywritingMessages = [
     {
       mainText: "Website Profesional untuk",
-      highlight: "Meningkatkan Penjualan",
+      highlight: "Meningkatkan Penjualan Bisnis Anda",
       subtitle: "Dapatkan website yang tidak hanya terlihat menarik, tetapi juga menghasilkan leads dan meningkatkan omset bisnis Anda hingga 300% 🚀"
     },
     {
@@ -605,11 +605,6 @@ export default function App() {
       mainText: "Website Modern & Responsif untuk",
       highlight: "Menjangkau Lebih Banyak Customer",
       subtitle: "80% pembeli browsing via mobile. Pastikan website Anda perfect di semua device untuk maksimalkan conversion 📱"
-    },
-    {
-      mainText: "Investasi Terbaik untuk",
-      highlight: "Masa Depan Bisnis Anda",
-      subtitle: "Website berkualitas = kredibilitas tinggi = customer lebih percaya = penjualan meningkat otomatis ✨"
     },
     {
       mainText: "Partner Digital Agency untuk",
