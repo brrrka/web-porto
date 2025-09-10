@@ -485,6 +485,7 @@ export default function App() {
   const [touchEndX, setTouchEndX] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [slideDirection, setSlideDirection] = useState('');
   const visibleProjects = 3;
 
   // Calculate max slides - untuk 6 projects, kita bisa slide sebanyak jumlah projects (seamless loop)
@@ -526,16 +527,24 @@ export default function App() {
   // Navigation functions - scroll one project at a time with smooth transition
   const nextProject = () => {
     if (isTransitioning) return;
+    setSlideDirection('right');
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev + 1) % maxSlides);
-    setTimeout(() => setIsTransitioning(false), 700);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setSlideDirection('');
+    }, 500);
   };
 
   const prevProject = () => {
     if (isTransitioning) return;
+    setSlideDirection('left');
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev - 1 + maxSlides) % maxSlides);
-    setTimeout(() => setIsTransitioning(false), 700);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setSlideDirection('');
+    }, 500);
   };
 
   // Touch handlers for mobile swipe
@@ -1035,10 +1044,10 @@ export default function App() {
       <section id="projects" className="pt-16 pb-24 lg:pt-20 lg:pb-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 lg:mb-6">
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Featured Projects
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-2">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
               Beberapa project terpilih yang menunjukkan kemampuan dan kualitas kerja saya.
             </p>
           </div>
@@ -1046,12 +1055,12 @@ export default function App() {
           {/* Desktop Carousel */}
           {!isMobile && (
             <div className="relative px-16 pb-16">
-              {/* Navigation Buttons - Positioned outside carousel */}
+              {/* Navigation Buttons - Fixed position relative to carousel container */}
               {PROJECTS.length > visibleProjects && (
                 <>
                   <button
                     onClick={prevProject}
-                    className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-indigo-50 text-indigo-600 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-indigo-100 hover:border-indigo-300"
+                    className="absolute -left-4 top-48 z-20 bg-white hover:bg-indigo-50 text-indigo-600 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-indigo-100 hover:border-indigo-300"
                   >
                     <svg className="w-7 h-7 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -1060,7 +1069,7 @@ export default function App() {
 
                   <button
                     onClick={nextProject}
-                    className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-indigo-50 text-indigo-600 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-indigo-100 hover:border-indigo-300"
+                    className="absolute -right-4 top-48 z-20 bg-white hover:bg-indigo-50 text-indigo-600 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group border-2 border-indigo-100 hover:border-indigo-300"
                   >
                     <svg className="w-7 h-7 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -1071,19 +1080,19 @@ export default function App() {
 
               {/* Projects Container with Smooth Sliding */}
               <div className="overflow-hidden">
-                <div className={`flex transition-all duration-700 ease-out ${isTransitioning ? 'opacity-95 transform scale-[0.98]' : 'opacity-100 transform scale-100'}`}>
+                <div className={`flex transition-all duration-500 ease-out ${isTransitioning ? 'opacity-90 scale-[0.98]' : 'opacity-100 scale-100'}`}>
                   {getVisibleProjects(currentIndex).map((project, index) => (
                     <div
                       key={`${project.id}-${currentIndex}-${index}`}
-                      className="w-1/3 flex-shrink-0 px-4"
+                      className={`w-1/3 flex-shrink-0 px-4 ${isTransitioning && slideDirection === 'right' ? 'carousel-slide-right' : ''} ${isTransitioning && slideDirection === 'left' ? 'carousel-slide-left' : ''} ${isTransitioning ? 'carousel-fade-slide' : ''}`}
                     >
-                      <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100 hover:border-indigo-200 h-full">
-                        {/* Image Container with Height Expand Effect */}
-                        <div className="relative overflow-hidden transition-all duration-700 ease-out h-48 group-hover:h-[450px]">
+                      <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl project-card-transition overflow-hidden border border-gray-100 hover:border-indigo-200 h-full">
+                        {/* Image Container with Height Expand Effect - Expand downward only */}
+                        <div className="relative overflow-hidden transition-all duration-700 ease-out h-48 group-hover:h-[350px]">
                           <img
                             src={project.image}
                             alt={project.title}
-                            className="w-full h-auto object-cover object-top transition-all duration-700 ease-out min-h-full"
+                            className="w-full h-auto object-cover object-top transition-none min-h-full group-hover:h-[350px]"
                           />
 
                           {/* Overlay with Demo Button - Fixed at bottom */}
@@ -1157,13 +1166,13 @@ export default function App() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
               >
-                <div className={`flex transition-all duration-500 ease-out ${isTransitioning ? 'opacity-90 transform scale-[0.97]' : 'opacity-100 transform scale-100'}`}>
+                <div className={`flex transition-all duration-500 ease-out ${isTransitioning ? 'opacity-90 scale-[0.98]' : 'opacity-100 scale-100'}`}>
                   {getVisibleProjects(currentIndex).slice(0, 1).map((project, index) => (
                     <div
                       key={project.id}
-                      className="w-full flex-shrink-0 px-2"
+                      className={`w-full flex-shrink-0 px-2 ${isTransitioning && slideDirection === 'right' ? 'carousel-slide-right' : ''} ${isTransitioning && slideDirection === 'left' ? 'carousel-slide-left' : ''} ${isTransitioning ? 'carousel-fade-slide' : ''}`}
                     >
-                      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 max-w-sm mx-auto">
+                      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 max-w-sm mx-auto project-card-transition">
                         {/* Mobile Image Container - Fixed height, no expand */}
                         <div className="relative h-48 overflow-hidden">
                           <img
@@ -1359,8 +1368,8 @@ export default function App() {
                   <path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Support Berkelanjutan</h3>
-              <p className="text-gray-600">Mendapatkan support teknis dan maintenance hingga 12 bulan setelah website launch</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Dukungan Penuh Untuk Anda</h3>
+              <p className="text-gray-600">Mendapatkan support teknis dan maintenance hingga 6 bulan setelah website launch</p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
